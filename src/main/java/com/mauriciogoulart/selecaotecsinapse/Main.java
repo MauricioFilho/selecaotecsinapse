@@ -6,6 +6,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -21,7 +22,7 @@ public class Main {
 
 		private String name;
 		private Integer quantidade;
-		private BigDecimal valor;
+		private BigDecimal valor; //sempre se usa bigdecimal para operações monetárias **
 		private Calendar dia;
 
 		public Produto() {
@@ -36,7 +37,8 @@ public class Main {
 			this.valor = valor;
 			this.dia = dia;
 		}
-
+		
+		
 		@Override
 		public String toString() {
 			return "Produto [name=" + name + ", quantidade=" + quantidade + ", valor=" + valor + ", dia="
@@ -64,7 +66,8 @@ public class Main {
 	public static void main(String[] args) throws ParseException {
 
 		List<Produto> produtos = new ArrayList<>();
-
+		
+		
 		JSONParser parser = new JSONParser();
 		try (FileReader reader = new FileReader("pedidos.json")) {
 			Object obj = parser.parse(reader);
@@ -83,11 +86,25 @@ public class Main {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
 		//agrupa todos os elementos da lista produtos em um map filtrado pelo mes de dezembro e agrupado por nome.
 		Map<String, List<Produto>> produtosPorName = produtos.stream()
 				.filter(produto -> produto.dia.get(Calendar.MONTH) == Calendar.DECEMBER)
 				.collect(Collectors.groupingBy(Produto::getName));
 		
+		/*
+		Map<String, Produto> totalProdutoPorNome = new HashMap<String, Main.Produto>();
+		
+		for(int i = 0; i < produtosPorName.keySet().size(); i++) {
+			
+				for(int j = 0; j < produtosPorName.keySet().size(); j++) {
+				
+					
+					
+				}	
+		}
+		
+		*/
 		//percorre todos os elementos da lista e realiza os calculos de valor e quantidade;
 		Map<String, Produto> totalProdutoPorNome = produtosPorName.entrySet().stream()
 				.collect(Collectors.toMap(Map.Entry::getKey,
@@ -96,16 +113,19 @@ public class Main {
 										produto.getQuantidade() + total.getQuantidade(),
 										produto.getValor().add(total.getValor()), produto.getDia()))));
 		
+		
+		
 		//Instancia de um treeMap para ordenar
 		TreeMap<String, Produto> totalProdutoOrdenado = new TreeMap<>();
 		
-		//Ordena o TreeMap 
+		//Atribui os elementos do map totalProdutosPorNome para o TreeMap totalProdutosOrdenado
 		totalProdutoPorNome.entrySet().forEach(entry -> totalProdutoOrdenado.put(entry.getKey(), entry.getValue()));
 		
 		//Verifica qual o item com maior quantidade e retorna ao objeto produto
 		Produto produto = totalProdutoOrdenado.entrySet().stream()
 				.max((e1, e2) -> e1.getValue().getQuantidade() - e2.getValue().getQuantidade())
 				.map(entry -> entry.getValue()).orElse(null);
+		
 		
 		//Atribuiu o nome do item e o valor final 
 		String resultadoFinal = produto.getName() + "#" + produto.getValor();
@@ -118,7 +138,7 @@ public class Main {
 	// Metodo que converte os dados do arquivo JSON para os atributos da classe
 	// Produto
 	private static Produto parserProduto(JSONObject pProdutos) throws ParseException {
-
+		
 		Calendar cal = Calendar.getInstance();
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 		cal.setTime(sdf.parse((String) pProdutos.get("dia")));
